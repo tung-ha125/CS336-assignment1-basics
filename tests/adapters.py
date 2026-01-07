@@ -656,9 +656,20 @@ def run_train_bpe(
             for text in segmented_text:
                 words = [x.group() for x in re.finditer(PAT, text)]
                 frequency_tables[word.encode("utf-8")] += 1
-    
-    for k, v in frequency_tables.item():
+
+    cur_num_vocab = 256 + len(special_tokens)
+    num_merge = vocab_size - cur_num_vocab
+    indices = list(map(int, k))
+    for nm in num_merge:
+
         counts = defaultdict(int)
-        indices = 
+        for k, v in frequency_tables.item():
+
+            for p1, p2 in zip(indices[:-1], indices[1:]):
+                counts[(p1, p2)] += v
+
+        merged_pair = max(counts, key=counts.get)
+        vocab[cur_num_vocab + nm] = merged_pair[0] + merged_pair[1]
+        merges.append(merged_pair)
         
     return (vocab, merges)
